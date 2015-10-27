@@ -1,0 +1,122 @@
+﻿@model ProyectoFinal.Models.SessionModel
+@using ProyectoFinal.Models
+@{
+	ViewBag.Title = "Play";
+	ViewBag.ShowFooter = false;
+}
+
+<div class="deck">
+	@foreach (var _ in Enumerable.Range(0, Model.DeckCount))
+	{
+		@Html.Partial("Card", new Card { Color = (Color)(-1), Rank = (Rank)(-1) })
+	}
+</div>
+<div class="discard-pile">
+	@foreach (var _ in Enumerable.Range(0, Model.DiscardPileCount))
+	{
+		@Html.Partial("Card", new Card { Color = (Color)(-1), Rank = (Rank)(-1) })
+	}
+	@Html.Partial("Card", Model.DiscardPileTop)
+</div>
+
+<div class="name-wrapper" style="bottom: 160px; left: calc(50% - 100px);">
+	<div id="user-@Model.Hands[0].User.Id" class="name @(Model.Hands[0].IsTheirTurn ? "active" : "")">
+		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[0].User.Id })"/>
+		<span>@Model.Hands[0].User.Name</span>
+	</div>
+</div>
+<div id="my-hand" class="cards" style="position: fixed; width: calc(100% - 320px); bottom: 0; left: 160px;">
+	@foreach (var card in Model.Hands[0].Cards)
+	{
+		@Html.Partial("Card", card)
+	}
+</div>
+
+<div class="name-wrapper" style="right: 160px; bottom: calc(50% - 120px); transform: rotate(-90deg)">
+	<div id="user-@Model.Hands[1].User.Id" class="name @(Model.Hands[1].IsTheirTurn ? "active" : "")">
+		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[1].User.Id })" />
+		<span>@Model.Hands[1].User.Name</span>
+	</div>
+</div>
+<div class="cards cards-rotate-270" style="position: fixed; height: calc(100% - 360px); top: 200px; right: 0; flex-direction: column; transform: rotate(180deg);">
+	@foreach (var card in Model.Hands[1].Cards)
+	{
+		@Html.Partial("Card", card)
+	}
+</div>
+
+<div class="name-wrapper" style="top: 200px; right: calc(50% - 100px); transform: rotate(180deg)">
+	<div id="user-@Model.Hands[2].User.Id" class="name @(Model.Hands[2].IsTheirTurn ? "active" : "")">
+		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[2].User.Id })" />
+		<span>@Model.Hands[2].User.Name</span>
+	</div>
+</div>
+<div class="cards" style="position: fixed; width: calc(100% - 320px); top: 40px; left: 160px; transform: rotate(180deg);">
+	@foreach (var card in Model.Hands[2].Cards)
+	{
+		@Html.Partial("Card", card)
+	}
+</div>
+
+
+<div class="name-wrapper" style="left: 160px; top: calc(50% - 80px); transform: rotate(90deg)">
+	<div id="user-@Model.Hands[3].User.Id" class="name @(Model.Hands[3].IsTheirTurn ? "active" : "")">
+		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[3].User.Id })" />
+		<span>@Model.Hands[3].User.Name</span>
+	</div>
+</div>
+<div class="cards cards-rotate-270" style="position: fixed; height: calc(100% - 360px); top: 200px; left: 0; flex-direction: column;">
+	@foreach (var card in Model.Hands[3].Cards)
+	{
+		@Html.Partial("Card", card)
+	}
+</div>
+
+@section scripts {
+<script>
+	$(function () {
+
+		var isMyTurn = @(Model.Hands[0].IsTheirTurn ? "true" : "false");
+
+		$(".cards").on("click", ".card", function (event) {
+			if (!isMyTurn) return;
+
+			var $this = $(this);
+			var $discardPileTop = $(".discard-pile .card").last();
+
+			if ($discardPileTop.data("color") == $this.data("color") || $discardPileTop.data("rank") == $this.data("rank")) {
+
+				var offsetLeft = $discardPileTop.offset().left - $this.offset().left;
+				var offsetTop = $discardPileTop.offset().top - ($this.offset().top - 0.3);
+
+				$this.velocity({
+					translateX: "+=" + (offsetLeft) + "px",
+					translateY: "+=" + (offsetTop) + "px",
+				});
+
+				$.ajax({
+					type: "post",
+					url: "@Url.Action("UseCard")",
+					data: {
+						sessionId: "@Model.Id",
+						cardId: $this.attr("id").replace("card-", ""),
+					},
+				}).done(function (data) {
+					$this.css("transform", "");
+					$this.appendTo(".discard-pile");
+					$(".name").removeClass("active");
+					$("#user-" + data).addClass("active");
+				}).fail(function (_, __, data) {
+					alert(data);
+					$this.velocity({
+						translateX: "-=" + (offsetLeft) + "px",
+						translateY: "-=" + (offsetTop) + "px",
+					});
+				});
+			}
+		});
+
+		$("")
+	});
+</script>
+}

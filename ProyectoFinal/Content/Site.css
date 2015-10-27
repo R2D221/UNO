@@ -1,0 +1,399 @@
+﻿body {
+	padding-top: 50px;
+	padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists
+   will truncate terms that are too long to fit in the left column
+*/
+.dl-horizontal dt {
+	white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+	max-width: 280px;
+}
+
+.card {
+	cursor: default;
+}
+
+#my-hand .card,
+.deck .card {
+	cursor: pointer;
+}
+
+.cards {
+	display: flex;
+	justify-content: center;
+}
+
+	.cards .card {
+		min-width: 0;
+		min-height: 0;
+		margin: 10px;
+	}
+
+.card-inner {
+	width: 100px;
+	height: 140px;
+	border-radius: 4px;
+	box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.5);
+	border: 8px solid white;
+	position: relative;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.cards-rotate-90 .card-inner,
+.cards-rotate-270 .card-inner {
+	width: 140px;
+	height: 100px;
+}
+
+.card-top, .card-bottom {
+	position: absolute;
+	color: white;
+	font-family: 'Fredoka One';
+	font-size: 16px;
+}
+
+.card-top {
+	top: 4px;
+	left: 8px;
+}
+
+.card-bottom {
+	bottom: 4px;
+	right: 8px;
+	-moz-transform: rotate(180deg);
+	-ms-transform: rotate(180deg);
+	-o-transform: rotate(180deg);
+	-webkit-transform: rotate(180deg);
+	transform: rotate(180deg);
+}
+
+.card-center {
+	position: absolute;
+	top: 18px;
+	left: 8px;
+	right: 8px;
+	bottom: 18px;
+	line-height: 88px;
+	border-top-left-radius: 34px;
+	border-bottom-right-radius: 34px;
+	font-family: 'Fredoka One';
+	font-size: 56px;
+	text-align: center;
+	background-color: white;
+}
+
+.card-back {
+	background-color: white;
+}
+
+	.card-back .card-center {
+		background-color: #630050;
+		color: white;
+		left: 0px;
+		right: 0px;
+		top: 10px;
+		bottom: 10px;
+		font-size: 32px;
+		line-height: 108px;
+	}
+
+.cards-rotate-90 .card-back .card-center,
+.cards-rotate-270 .card-back .card-center {
+	left: 20px;
+	top: -10px;
+	bottom: -10px;
+	right: 20px;
+}
+
+.cards-rotate-90 .card-back .card-center {
+	-moz-transform: rotate(-90deg);
+	-ms-transform: rotate(-90deg);
+	-o-transform: rotate(-90deg);
+	-webkit-transform: rotate(-90deg);
+	transform: rotate(-90deg);
+}
+
+.cards-rotate-180 .card-back .card-center {
+	-moz-transform: rotate(-180deg);
+	-ms-transform: rotate(-180deg);
+	-o-transform: rotate(-180deg);
+	-webkit-transform: rotate(-180deg);
+	transform: rotate(-180deg);
+}
+
+.cards-rotate-270 .card-back .card-center {
+	-moz-transform: rotate(-270deg);
+	-ms-transform: rotate(-270deg);
+	-o-transform: rotate(-270deg);
+	-webkit-transform: rotate(-270deg);
+	transform: rotate(-270deg);
+}
+
+/*http://paletton.com/#uid=7051q0kv8rHkuz6pWv9ydmpFshh*/
+.card-red {
+	background-color: #DD1F06;
+}
+
+	.card-red .card-center {
+		color: #DD1F06;
+	}
+
+.card-yellow {
+	background-color: #DDBE06;
+}
+
+	.card-yellow .card-center {
+		color: #DDBE06;
+	}
+
+.card-green {
+	background-color: #04A52F;
+}
+
+	.card-green .card-center {
+		color: #04A52F;
+	}
+
+.card-blue {
+	background-color: #3B1397;
+}
+
+	.card-blue .card-center {
+		color: #3B1397;
+	}
+
+@-moz-keyframes wild-background {
+	0% {
+		background-color: #DD1F06;
+	}
+
+	25% {
+		background-color: #DDBE06;
+	}
+
+	50% {
+		background-color: #04A52F;
+	}
+
+	75% {
+		background-color: #3B1397;
+	}
+
+	100% {
+		background-color: #DD1F06;
+	}
+}
+
+@-webkit-keyframes wild-background {
+	0% {
+		background-color: #DD1F06;
+	}
+
+	25% {
+		background-color: #DDBE06;
+	}
+
+	50% {
+		background-color: #04A52F;
+	}
+
+	75% {
+		background-color: #3B1397;
+	}
+
+	100% {
+		background-color: #DD1F06;
+	}
+}
+
+@keyframes wild-background {
+	0% {
+		background-color: #DD1F06;
+	}
+
+	25% {
+		background-color: #DDBE06;
+	}
+
+	50% {
+		background-color: #04A52F;
+	}
+
+	75% {
+		background-color: #3B1397;
+	}
+
+	100% {
+		background-color: #DD1F06;
+	}
+}
+
+@-moz-keyframes wild-foreground {
+	0% {
+		color: #DD1F06;
+	}
+
+	25% {
+		color: #DDBE06;
+	}
+
+	50% {
+		color: #04A52F;
+	}
+
+	75% {
+		color: #3B1397;
+	}
+
+	100% {
+		color: #DD1F06;
+	}
+}
+
+@-webkit-keyframes wild-foreground {
+	0% {
+		color: #DD1F06;
+	}
+
+	25% {
+		color: #DDBE06;
+	}
+
+	50% {
+		color: #04A52F;
+	}
+
+	75% {
+		color: #3B1397;
+	}
+
+	100% {
+		color: #DD1F06;
+	}
+}
+
+@keyframes wild-foreground {
+	0% {
+		color: #DD1F06;
+	}
+
+	25% {
+		color: #DDBE06;
+	}
+
+	50% {
+		color: #04A52F;
+	}
+
+	75% {
+		color: #3B1397;
+	}
+
+	100% {
+		color: #DD1F06;
+	}
+}
+
+.card-wild {
+	background-color: gray;
+	-moz-animation: wild-background 4s infinite;
+	-o-animation: wild-background 4s infinite;
+	-webkit-animation: wild-background 4s infinite;
+	animation: wild-background 4s infinite;
+}
+
+	.card-wild .card-center {
+		color: gray;
+		-moz-animation: wild-foreground 4s infinite;
+		-o-animation: wild-foreground 4s infinite;
+		-webkit-animation: wild-foreground 4s infinite;
+		animation: wild-foreground 4s infinite;
+	}
+
+.deck {
+	position: fixed;
+	top: calc(50% - 50px);
+	left: calc(50% - 105px);
+}
+
+.discard-pile {
+	position: fixed;
+	top: calc(50% - 50px);
+	left: calc(50% + 5px);
+}
+
+	.deck .card,
+	.discard-pile .card {
+		width: 0;
+		height: 0;
+		margin-top: -0.3px;
+	}
+
+	.deck .card-inner,
+	.discard-pile .card-inner {
+		box-shadow: 0px 0px 3px 0px rgba(0,0,0,0.5);
+	}
+
+.name-wrapper {
+	position: fixed;
+	width: 48px;
+	height: 48px;
+}
+
+.name {
+	width: 200px;
+	height: 48px;
+	line-height: 32px;
+	padding: 8px;
+	background-color: rgba(0,0,0,0.7);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+	.name.active {
+		box-shadow: 0 0 3px 5px limegreen;
+	}
+
+	.name img, .name .img {
+		width: 32px;
+		height: 32px;
+		float: left;
+		margin-right: 4px;
+		display: inline-block;
+		background-color: darkred;
+	}
+
+.session-info .card {
+	-moz-transform: scale(0.5);
+	-ms-transform: scale(0.5);
+	-o-transform: scale(0.5);
+	-webkit-transform: scale(0.5);
+	transform: scale(0.5);
+	float: left;
+	margin: -30px -10px;
+}
+
+.user {
+	background-color: rgba(0, 0, 0, 0.5);
+	display: inline-block;
+	margin-top: 6px;
+	margin-right: 8px;
+	padding-right: 8px;
+}

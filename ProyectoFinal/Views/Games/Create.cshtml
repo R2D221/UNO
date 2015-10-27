@@ -1,0 +1,18 @@
+﻿@model ProyectoFinal.Models.CreateGameViewModel
+@{
+	ViewBag.Title = "Crear juego";
+}
+
+<div class="jumbotron">
+@using (Html.BeginForm())
+{
+	<h1>Crear un juego nuevo</h1>
+	<p>Ingresa los correos de 3 amigos para iniciar a jugar:</p>
+	<p>
+		@Html.EditorFor(model => model.Email2)
+		@Html.EditorFor(model => model.Email3)
+		@Html.EditorFor(model => model.Email4)
+	</p>
+	<p><button class="btn btn-primary btn-lg">Crear</button></p>
+}
+</div>

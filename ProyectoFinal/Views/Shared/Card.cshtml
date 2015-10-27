@@ -1,0 +1,55 @@
+﻿@model ProyectoFinal.Models.Card
+@{
+	ViewBag.Title = "Card";
+
+	var face = Model.Rank.ToString();
+
+	var color = face.StartsWith("Wild") ? "wild" : Model.Color.ToString().ToLower();
+
+	if (face.StartsWith("_"))
+	{
+		face = face[1].ToString();
+	}
+	else
+	{
+		switch (face)
+		{
+			case "Skip":
+			face = "<span class=\"typcn typcn-cancel\"></span>";
+			break;
+			case "Reverse":
+			face = "<span class=\"typcn typcn-arrow-repeat\"></span>";
+			break;
+			case "DrawTwo":
+			face = "+2";
+			break;
+			case "Wild":
+			face = "<span class=\"typcn typcn-th-large\"></span>";
+			break;
+			case "WildDrawFour":
+			face = "+4";
+			break;
+			case "-1":
+			face = "UNO";
+			break;
+		}
+	}
+}
+@if (((int)Model.Rank) == -1)
+{
+	<div class="card">
+		<div class="card-inner card-back">
+			<div class="card-center">@Html.Raw(face)</div>
+		</div>
+	</div>
+}
+else
+{
+	<div class="card" id="card-@Model.Id" data-color="@color" data-rank="@Model.Rank.ToString()">
+		<div class="card-inner card-@color">
+			<div class="card-top">@Html.Raw(face)</div>
+			<div class="card-center">@Html.Raw(face)</div>
+			<div class="card-bottom">@Html.Raw(face)</div>
+		</div>
+	</div>
+}

@@ -1,0 +1,52 @@
+﻿@model IEnumerable<ProyectoFinal.Models.SessionInfoModel>
+
+@{
+	ViewBag.Title = "Dashboard";
+}
+
+<h2>Partidas actuales</h2>
+
+@foreach (var info in Model)
+{
+	<hr />
+	<div class="session-info">
+		@Html.Partial("Card", info.DiscardPileTop)
+		@foreach (var user in info.Players)
+		{
+			<div class="user">
+				<img src="@Url.Action("Photo", "Account", new { userId = user.Id })" style="height: 32px;" />
+				<span>@(user.Name)</span>
+			</div>
+		}
+		<br />
+		<a class="btn btn-default" href="@Url.Action("Play", "Games", new { id = info.Id })">¡Jugar!</a>
+		<br style="clear: both;" />
+	</div>
+}
+
+@*<div>
+		<hr />
+		<h4>Partidas actuales</h4>
+		<table class="table table-striped">
+			<tr>
+				<th>Jugadores</th>
+				<th>Fecha de inicio</th>
+				<th></th>
+			</tr>
+			@foreach (var info in Model)
+			{
+				<tr>
+					<td>
+						@foreach (var user in info.Players)
+						{
+							@(user.Name)
+							<br />
+						}
+					</td>
+					<td>...</td>
+					<td><a class="btn btn-default">Jugar</a></td>
+				</tr>
+			}
+		</table>
+	</div>*@
+
