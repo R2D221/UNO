@@ -23,6 +23,7 @@ namespace ProyectoFinal.Controllers
 		{
 			if (!ModelState.IsValid)
 			{
+				ModelState.AddModelError("", "Hay un error con los correos. Veríficalos y vuelve a intentarlo");
 				return View(model);
 			}
 
@@ -30,10 +31,30 @@ namespace ProyectoFinal.Controllers
 
 			using (var gamesService = new GamesService())
 			{
-				var first = User.Identity.GetUserId();
-				var second = userManager.FindByEmail(model.Email2).Id;
-				var third = userManager.FindByEmail(model.Email3).Id;
-				var fourth = userManager.FindByEmail(model.Email4).Id;
+				string first;
+				string second;
+				string third;
+				string fourth;
+
+				try
+				{
+					first = User.Identity.GetUserId();
+					second = userManager.FindByEmail(model.Email2).Id;
+					third = userManager.FindByEmail(model.Email3).Id;
+					fourth = userManager.FindByEmail(model.Email4).Id;
+				}
+				catch (Exception)
+				{
+					ModelState.AddModelError("", "Hay un error con los correos. Veríficalos y vuelve a intentarlo");
+					return View(model);
+				}
+
+				var set = new HashSet<string>(new[] { first, second, third, fourth });
+				if (set.Count != 4)
+				{
+					ModelState.AddModelError("", "No puedes invitar a un amigo más de una vez");
+					return View(model);
+				}
 
 				var sessionId = gamesService.Create(first, second, third, fourth);
 

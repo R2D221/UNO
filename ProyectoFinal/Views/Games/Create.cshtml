@@ -6,6 +6,7 @@
 <div class="jumbotron">
 @using (Html.BeginForm())
 {
+	@Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
 	<h1>Crear un juego nuevo</h1>
 	<p>Ingresa los correos de 3 amigos para iniciar a jugar:</p>
 	<p>
