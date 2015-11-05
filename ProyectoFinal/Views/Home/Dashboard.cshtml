@@ -6,6 +6,10 @@
 
 <h2>Partidas actuales</h2>
 
+<hr />
+
+<a class="btn btn-default" href="@Url.Action("Create", "Games")">Crear nueva</a>
+
 @foreach (var info in Model)
 {
 	<hr />
@@ -23,30 +27,3 @@
 		<br style="clear: both;" />
 	</div>
 }
-
-@*<div>
-		<hr />
-		<h4>Partidas actuales</h4>
-		<table class="table table-striped">
-			<tr>
-				<th>Jugadores</th>
-				<th>Fecha de inicio</th>
-				<th></th>
-			</tr>
-			@foreach (var info in Model)
-			{
-				<tr>
-					<td>
-						@foreach (var user in info.Players)
-						{
-							@(user.Name)
-							<br />
-						}
-					</td>
-					<td>...</td>
-					<td><a class="btn btn-default">Jugar</a></td>
-				</tr>
-			}
-		</table>
-	</div>*@
-

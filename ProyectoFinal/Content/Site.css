@@ -1,4 +1,4 @@
-﻿body {
+body {
 	padding-top: 50px;
 	padding-bottom: 20px;
 }
@@ -35,13 +35,22 @@ textarea {
 .cards {
 	display: flex;
 	justify-content: center;
+	height: 160px;
 }
 
-	.cards .card {
-		min-width: 0;
-		min-height: 0;
-		margin: 10px;
-	}
+.cards-rotate-90,
+.cards-rotate-270 {
+	width: 160px;
+}
+
+.cards .card {
+	min-width: 0;
+	min-height: 0;
+	margin: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
 
 .card-inner {
 	width: 100px;
@@ -54,12 +63,7 @@ textarea {
 	-ms-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
-}
-
-.cards-rotate-90 .card-inner,
-.cards-rotate-270 .card-inner {
-	width: 140px;
-	height: 100px;
+	flex-shrink: 0;
 }
 
 .card-top, .card-bottom {
@@ -114,36 +118,9 @@ textarea {
 		line-height: 108px;
 	}
 
-.cards-rotate-90 .card-back .card-center,
-.cards-rotate-270 .card-back .card-center {
-	left: 20px;
-	top: -10px;
-	bottom: -10px;
-	right: 20px;
-}
-
-.cards-rotate-90 .card-back .card-center {
-	-moz-transform: rotate(-90deg);
-	-ms-transform: rotate(-90deg);
-	-o-transform: rotate(-90deg);
-	-webkit-transform: rotate(-90deg);
-	transform: rotate(-90deg);
-}
-
-.cards-rotate-180 .card-back .card-center {
-	-moz-transform: rotate(-180deg);
-	-ms-transform: rotate(-180deg);
-	-o-transform: rotate(-180deg);
-	-webkit-transform: rotate(-180deg);
-	transform: rotate(-180deg);
-}
-
-.cards-rotate-270 .card-back .card-center {
-	-moz-transform: rotate(-270deg);
-	-ms-transform: rotate(-270deg);
-	-o-transform: rotate(-270deg);
-	-webkit-transform: rotate(-270deg);
-	transform: rotate(-270deg);
+.cards-rotate-90 .card-inner,
+.cards-rotate-270 .card-inner {
+	transform: rotate(90deg);
 }
 
 /*http://paletton.com/#uid=7051q0kv8rHkuz6pWv9ydmpFshh*/

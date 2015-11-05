@@ -147,7 +147,7 @@ namespace ProyectoFinal.Services
 
 		public IEnumerable<SessionInfoModel> GetActiveSessionsForUser(string userId)
 		{
-			foreach (var entry in activeSessionsByUser[userId].Value)
+			foreach (var entry in activeSessionsByUser.GetOrAdd(userId, _ => new ConcurrentDictionary<Guid, SessionWithTurns>()))
 			{
 				yield return new SessionInfoModel
 				{
@@ -173,7 +173,7 @@ namespace ProyectoFinal.Services
 			};
 		}
 
-		public string TryUseCard(Guid sessionId, string userId, int cardId)
+		public GameUpdateModel TryUseCard(Guid sessionId, string userId, int cardId)
 		{
 			var session = activeSessions[sessionId];
 			var hand = session.GetHandForUserId(userId);
@@ -186,12 +186,12 @@ namespace ProyectoFinal.Services
 				return null;
 
 			var discardPileTop = session.DiscardPile.Peek();
-			if (card.Color != discardPileTop.Color && card.Rank != discardPileTop.Rank)
-				return null;
+			//if (card.Color != discardPileTop.Color && card.Rank != discardPileTop.Rank)
+			//	return null;
 
 			hand.Cards.Remove(card);
 			session.DiscardPile.Push(card);
-			var newUserTurn = session.MoveNext();
+			var nextUserId = session.MoveNext();
 
 			var cardToRemove = db.Hands.Find(hand.Id).Cards.Single(c => c.Id == card.Id);
 			db.Hands.Find(hand.Id).Cards.Remove(cardToRemove);
@@ -206,14 +206,20 @@ namespace ProyectoFinal.Services
 			});
 			dbSession.DiscardPileTopId = card.Id;
 
-			dbSession.Hand1.IsTheirTurn = dbSession.Hand1.UserId == newUserTurn ? true : false;
-			dbSession.Hand2.IsTheirTurn = dbSession.Hand2.UserId == newUserTurn ? true : false;
-			dbSession.Hand3.IsTheirTurn = dbSession.Hand3.UserId == newUserTurn ? true : false;
-			dbSession.Hand4.IsTheirTurn = dbSession.Hand4.UserId == newUserTurn ? true : false;
+			dbSession.Hand1.IsTheirTurn = dbSession.Hand1.UserId == nextUserId ? true : false;
+			dbSession.Hand2.IsTheirTurn = dbSession.Hand2.UserId == nextUserId ? true : false;
+			dbSession.Hand3.IsTheirTurn = dbSession.Hand3.UserId == nextUserId ? true : false;
+			dbSession.Hand4.IsTheirTurn = dbSession.Hand4.UserId == nextUserId ? true : false;
 
 			db.SaveChanges();
 
-			return newUserTurn;
+			return new GameUpdateModel
+			{
+				Direction	= session.Direction,
+				Card	= card,
+				PreviousUserId	= userId,
+				NextUserId	= nextUserId,
+			};
 		}
 	}
 }

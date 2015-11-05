@@ -1,7 +1,5 @@
 ﻿@model ProyectoFinal.Models.Card
 @{
-	ViewBag.Title = "Card";
-
 	var face = Model.Rank.ToString();
 
 	var color = face.StartsWith("Wild") ? "wild" : Model.Color.ToString().ToLower();

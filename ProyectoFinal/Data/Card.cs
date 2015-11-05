@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace ProyectoFinal.Models
 {
@@ -13,6 +14,7 @@ namespace ProyectoFinal.Models
 
 		public Rank Rank { get; set; }
 
+		[JsonIgnore]
 		public virtual ICollection<Hand> Hands { get; set; } = new HashSet<Hand>();
 
 		public override string ToString()

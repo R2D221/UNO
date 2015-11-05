@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
@@ -68,22 +69,6 @@ namespace ProyectoFinal.Controllers
 			{
 				var session = gamesService.GetSession(id, User.Identity.GetUserId());
 				return View(session);
-			}
-		}
-
-		public ActionResult UseCard(Guid sessionId, int cardId)
-		{
-			using (var gamesService = new GamesService())
-			{
-				var newUserTurn = gamesService.TryUseCard(sessionId, User.Identity.GetUserId(), cardId);
-				if (newUserTurn == null)
-				{
-					return new HttpStatusCodeResult(400, "Jugada inválida");
-				}
-				else
-				{
-					return Content(newUserTurn);
-				}
 			}
 		}
 	}
