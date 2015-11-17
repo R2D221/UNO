@@ -325,7 +325,8 @@ textarea {
 
 	.deck .card-inner,
 	.discard-pile .card-inner {
-		box-shadow: 0px 0px 3px 0px rgba(0,0,0,0.5);
+		/*box-shadow: 0px 0px 3px 0px rgba(0,0,0,0.5);*/
+	    box-shadow: 0px 1px 0px #444;
 	}
 
 .name-wrapper {
@@ -373,4 +374,25 @@ textarea {
 	margin-top: 6px;
 	margin-right: 8px;
 	padding-right: 8px;
+}
+
+.skip, .draw-two
+{
+	position: absolute;
+	top: -60px;
+	font-size: 60px;
+	font-weight: bold;
+	width: 184px;
+	text-align: center;
+	border-radius: 100px;
+	background-color: red;
+	text-shadow: 2px 2px 0px #2b3e50, -2px 2px 0px #2b3e50, -2px -2px 0px #2b3e50, 2px -2px 0px #2b3e50;
+}
+
+.skip {
+	background-color: red;
+}
+
+.draw-two {
+	background-color: gold;
 }

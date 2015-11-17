@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Web;
+using EntityFramework.Extensions;
 using ProyectoFinal.Models;
 using ProyectoFinal.Utils;
 
@@ -189,27 +190,71 @@ namespace ProyectoFinal.Services
 			//if (card.Color != discardPileTop.Color && card.Rank != discardPileTop.Rank)
 			//	return null;
 
-			hand.Cards.Remove(card);
-			session.DiscardPile.Push(card);
-			var nextUserId = session.MoveNext();
-
-			var cardToRemove = db.Hands.Find(hand.Id).Cards.Single(c => c.Id == card.Id);
-			db.Hands.Find(hand.Id).Cards.Remove(cardToRemove);
 			var dbSession = db.Sessions.Find(sessionId);
 			var dbDiscard = dbSession.DiscardPileTop;
-			var lastOrder = dbSession.Deck.Where(c => c.IsDiscarded).OrderByDescending(c => c.Order).Select(c => c.Order).FirstOrDefault();
-			dbSession.Deck.Add(new CardInPile
-			{
-				Card = dbDiscard,
-				IsDiscarded = true,
-				Order = lastOrder + 1,
-			});
-			dbSession.DiscardPileTopId = card.Id;
 
-			dbSession.Hand1.IsTheirTurn = dbSession.Hand1.UserId == nextUserId ? true : false;
-			dbSession.Hand2.IsTheirTurn = dbSession.Hand2.UserId == nextUserId ? true : false;
-			dbSession.Hand3.IsTheirTurn = dbSession.Hand3.UserId == nextUserId ? true : false;
-			dbSession.Hand4.IsTheirTurn = dbSession.Hand4.UserId == nextUserId ? true : false;
+			// Move card from hand to discard pile
+			{
+				hand.Cards.Remove(card);
+				session.DiscardPile.Push(card);
+
+				var cardToRemove = db.Cards.Find(card.Id);
+				db.Hands.Find(hand.Id).Cards.Remove(cardToRemove);
+				var lastOrder = dbSession.Deck.Where(c => c.IsDiscarded).OrderByDescending(c => c.Order).Select(c => c.Order).FirstOrDefault();
+				dbSession.Deck.Add(new CardInPile
+				{
+					Card = dbDiscard,
+					IsDiscarded = true,
+					Order = lastOrder + 1,
+				});
+				dbSession.DiscardPileTopId = card.Id;
+			}
+
+			ActionModel action = null;
+		
+			switch (Rank.DrawTwo)
+			//switch (card.Rank)
+			{
+				case Rank.Skip:
+				{
+					var skippedUserId = session.MoveNext();
+					action = new ActionModel
+					{
+						Rank = Rank.Skip,
+						UserId = skippedUserId,
+					};
+				}
+				break;
+				case Rank.DrawTwo:
+				{
+					var skippedUserId = session.MoveNext();
+					var cardsReceived = new List<Card> { session.Deck.Pop(), session.Deck.Pop() };
+					session.GetHandForUserId(skippedUserId).Cards.AddRange(cardsReceived);
+					action = new ActionModel
+					{
+						Rank = Rank.Skip,
+						UserId = skippedUserId,
+						CardsReceived = cardsReceived,
+					};
+				
+					var dbHand = db.Hands.Single(a => a.SessionId == sessionId && a.UserId == skippedUserId);
+					foreach (var cardReceived in cardsReceived)
+					{ 
+						var dbCard = db.Cards.Find(cardReceived.Id);
+						dbSession.Deck.Remove(dbSession.Deck.Single(a => a.CardId == cardReceived.Id));
+						dbHand.Cards.Add(dbCard);
+					}
+				}
+				break;
+			}
+
+			// Turn to next user
+			var nextUserId = session.MoveNext();
+
+			dbSession.Hand1.IsTheirTurn = dbSession.Hand1.UserId == nextUserId;
+			dbSession.Hand2.IsTheirTurn = dbSession.Hand2.UserId == nextUserId;
+			dbSession.Hand3.IsTheirTurn = dbSession.Hand3.UserId == nextUserId;
+			dbSession.Hand4.IsTheirTurn = dbSession.Hand4.UserId == nextUserId;
 
 			db.SaveChanges();
 
@@ -219,6 +264,7 @@ namespace ProyectoFinal.Services
 				Card	= card,
 				PreviousUserId	= userId,
 				NextUserId	= nextUserId,
+				Action	= action,
 			};
 		}
 	}

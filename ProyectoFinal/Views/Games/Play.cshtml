@@ -6,10 +6,10 @@
 }
 
 <div class="deck">
-	@*@foreach (var _ in Enumerable.Range(0, Model.DeckCount))
+	@foreach (var _ in Enumerable.Range(0, Model.DeckCount))
 	{
 		@Html.Partial("Card", new Card { Color = (Color)(-1), Rank = (Rank)(-1) })
-	}*@
+	}
 </div>
 <div class="discard-pile">
 	@foreach (var _ in Enumerable.Range(0, Model.DiscardPileCount))
@@ -21,6 +21,8 @@
 
 <div class="name-wrapper" style="bottom: 160px; left: calc(50% - 100px);">
 	<div id="user-@Model.Hands[0].User.Id" class="name @(Model.Hands[0].IsTheirTurn ? "active" : "")">
+		<div class="skip" style="display: none;">SKIP</div>
+		<div class="draw-two" style="display: none;">+2</div>
 		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[0].User.Id })"/>
 		<span>@Model.Hands[0].User.Name</span>
 	</div>
@@ -34,6 +36,8 @@
 
 <div class="name-wrapper" style="right: 160px; bottom: calc(50% - 120px); transform: rotate(-90deg)">
 	<div id="user-@Model.Hands[1].User.Id" class="name @(Model.Hands[1].IsTheirTurn ? "active" : "")">
+		<div class="skip" style="display: none;">SKIP</div>
+		<div class="draw-two" style="display: none;">+2</div>
 		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[1].User.Id })" />
 		<span>@Model.Hands[1].User.Name</span>
 	</div>
@@ -47,6 +51,8 @@
 
 <div class="name-wrapper" style="top: 200px; right: calc(50% - 100px); transform: rotate(180deg)">
 	<div id="user-@Model.Hands[2].User.Id" class="name @(Model.Hands[2].IsTheirTurn ? "active" : "")">
+		<div class="skip" style="display: none;">SKIP</div>
+		<div class="draw-two" style="display: none;">+2</div>
 		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[2].User.Id })" />
 		<span>@Model.Hands[2].User.Name</span>
 	</div>
@@ -61,6 +67,8 @@
 
 <div class="name-wrapper" style="left: 160px; top: calc(50% - 80px); transform: rotate(90deg)">
 	<div id="user-@Model.Hands[3].User.Id" class="name @(Model.Hands[3].IsTheirTurn ? "active" : "")">
+		<div class="skip" style="display: none;">SKIP</div>
+		<div class="draw-two" style="display: none;">+2</div>
 		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[3].User.Id })" />
 		<span>@Model.Hands[3].User.Name</span>
 	</div>
@@ -81,9 +89,99 @@
 		var userId = "@Model.Hands[0].User.Id";
 		var isMyTurn = @(Model.Hands[0].IsTheirTurn ? "true" : "false");
 		var game = $.connection.gameHub;
+	
+		var cardsReceived = [];
+	
+		game.client.receiveCards = function (cards) {
+			cardsReceived = cards;
+		}
 
 		game.client.update = function (info) {
-			isMyTurn = info.NextUserId == userId;
+
+			function checkAction() {
+				$("#user-" + info.PreviousUserId).removeClass("active");
+
+				if (!info.Action) {
+					$("#user-" + info.NextUserId).addClass("active");
+					isMyTurn = info.NextUserId == userId;
+				}
+				//else switch (info.Action.Rank)
+				else switch ("@((int)Rank.DrawTwo)")
+				{
+					default: throw Error("Unknown rank");
+					case "@((int)Rank.Skip)":
+						$("#user-" + info.Action.UserId).find(".skip")
+							.velocity("fadeIn")
+							.velocity("fadeOut", {
+								delay: 500,
+								complete: function () {
+									$("#user-" + info.NextUserId).addClass("active");
+									isMyTurn = info.NextUserId == userId;
+								},
+							});
+					break;
+					case "@((int)Rank.DrawTwo)":
+						$("#user-" + info.Action.UserId).find(".draw-two")
+							.velocity("fadeIn")
+							.velocity("fadeOut", {
+								delay: 500,
+								complete: function () {
+									$("#user-" + info.NextUserId).addClass("active");
+									isMyTurn = info.NextUserId == userId;
+								},
+							});
+					
+						if (cardsReceived.length)
+						{
+							var $cardsReceivedHTML = $();
+
+							$(".discard-pile .card").slice(-cardsReceived.length).remove();
+						
+							cardsReceived.forEach(function (value, index) {
+								var $card = $(value.trim());
+								$(".discard-pile .card").append($card);
+								$cardsReceivedHTML.add($card);
+							});
+						
+							cardsReceived = [];
+						}
+						else
+						{
+							var $cardsReceivedHTML = $(".deck .card").slice(-2);
+							$cardsReceivedHTML.each(function (index)
+							{
+								var $card = $(this);
+								var $hand = $("#hand-" + info.Action.UserId);
+								
+								var transform;
+							
+								if ($hand.is(".cards-rotate-270"))
+								{
+									//vertical
+									var offsetLeft = $hand.offset().left - $card.offset().left;
+									transform = { translateX: "+=" + offsetLeft };
+								}
+								else
+								{
+									//horizontal
+									var offsetTop = $hand.offset().top - $card.offset().top;
+									transform = { translateY: "+=" + offsetTop };
+								}
+							
+								$card.velocity(transform,
+									{
+										delay: 500 * index,
+										complete: function ()
+										{
+											$card.css("transform", "").appendTo($hand);
+										}
+									});
+							});
+						}
+					break;
+				}
+			}
+
 			if (info.PreviousUserId != userId) {
 				var $newCard = $(info.CardHtml.trim());
 				$("#hand-" + info.PreviousUserId).find(".card").last().remove();
@@ -105,13 +203,11 @@
 					translateY: "+=" + (offsetTop) + "px",
 				}, function () {
 					$newCard.css("transform", "");
-					$("#user-" + info.PreviousUserId).removeClass("active");
-					$("#user-" + info.NextUserId).addClass("active");
+					checkAction();
 				});
 			}
 			else {
-				$("#user-" + info.PreviousUserId).removeClass("active");
-				$("#user-" + info.NextUserId).addClass("active");
+				checkAction();
 			}
 		}
 
