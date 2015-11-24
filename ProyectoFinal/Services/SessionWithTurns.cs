@@ -10,6 +10,7 @@ namespace ProyectoFinal.Services
 	{
 		private readonly IReadOnlyList<HandModel> hands;
 		private int current;
+		private int previous;
 	
 		public DateTime LastPlayed { get; set; }
 
@@ -33,6 +34,7 @@ namespace ProyectoFinal.Services
 
 		public string MoveNext()
 		{
+			previous = current;
 			hands[current].IsTheirTurn = false;
 			switch (Direction)
 			{
@@ -60,6 +62,10 @@ namespace ProyectoFinal.Services
 			Direction = Direction ^ Direction.Clockwise; //<-- fast way to alternate
 			return Direction;
 		}
+	
+		public HandModel Previous => hands[previous];
+		public bool IsPrevious(string userId)
+			=> hands[previous].User.Id == userId;
 
 		public bool IsTheirTurn(string userId)
 			=> hands.Any(h => h.IsTheirTurn && h.User.Id == userId);
@@ -85,5 +91,8 @@ namespace ProyectoFinal.Services
 				};
 			}
 		}
+
+		public HandModel FindUno()
+			=> hands.SingleOrDefault(h => IsPrevious(h.User.Id) && h.Cards.Count == 1);
 	}
 }

@@ -157,7 +157,7 @@ namespace ProyectoFinal.Services
 
 		public IEnumerable<SessionInfoModel> GetActiveSessionsForUser(string userId)
 		{
-			foreach (var entry in activeSessionsByUser.GetOrAdd(userId, _ => new ConcurrentDictionary<Guid, SessionWithTurns>()).OrderBy(x => x.Value.LastPlayed))
+			foreach (var entry in activeSessionsByUser.GetOrAdd(userId, _ => new ConcurrentDictionary<Guid, SessionWithTurns>()).OrderByDescending(x => x.Value.LastPlayed))
 			{
 				yield return new SessionInfoModel
 				{
@@ -311,6 +311,11 @@ namespace ProyectoFinal.Services
 			session.LastPlayed = dbSession.LastPlayed;
 
 			db.SaveChanges();
+		
+			// Need to yell UNO!
+			if (hand.Cards.Count == 1) {
+				hand.IsSafe = null;
+			}
 
 			return new GameUpdateModel
 			{
@@ -319,6 +324,7 @@ namespace ProyectoFinal.Services
 				PreviousUserId	= userId,
 				NextUserId	= nextUserId,
 				Action	= action,
+				UNO	= hand.Cards.Count == 1,
 			};
 		}
 
@@ -356,6 +362,57 @@ namespace ProyectoFinal.Services
 				Card	= card,
 				PreviousUserId	= userId,
 				NextUserId	= nextUserId,
+			};
+		}
+	
+		public bool TryYellUno(Guid sessionId, string userId)
+		{
+			var session = activeSessions[sessionId];
+			var hand = session.GetHandForUserId(userId);
+			if (session.IsPrevious(userId) && hand.IsSafe == null)
+			{
+				hand.IsSafe = true;
+				return true;
+			}
+			return false;
+		}
+
+		public GameUpdateModel TryBlameUno(Guid sessionId)
+		{
+			var session = activeSessions[sessionId];
+			var unoHand = session.FindUno();
+			if (unoHand == null || unoHand.IsSafe != null)
+				return null;
+		
+			unoHand.IsSafe = false;
+			
+			var dbSession = db.Sessions.Find(sessionId);
+
+			List<Card> cardsReceived = new List<Card> { session.Deck.Pop(), session.Deck.Pop() };
+			session.GetHandForUserId(unoHand.User.Id).Cards.AddRange(cardsReceived);
+			var action = new ActionModel
+			{
+				Rank = Rank.DrawTwo,
+				UserId = unoHand.User.Id,
+				CardsReceived = cardsReceived,
+			};
+				
+			var dbHand = db.Hands.Single(a => a.SessionId == sessionId && a.UserId == unoHand.User.Id);
+			foreach (var cardReceived in cardsReceived)
+			{ 
+				var dbCard = db.Cards.Find(cardReceived.Id);
+				dbSession.Deck.Remove(dbSession.Deck.Single(a => a.CardId == cardReceived.Id));
+				dbHand.Cards.Add(dbCard);
+			}
+		
+			db.SaveChanges();
+
+			return new GameUpdateModel
+			{
+				Direction	= session.Direction,
+				PreviousUserId	= session.Previous.User.Id,
+				NextUserId	= session.Current.User.Id,
+				Action	= action,
 			};
 		}
 	}

@@ -38,6 +38,7 @@ namespace ProyectoFinal.Hubs
 				}
 				else
 				{
+					Clients.Group(sessionId.ToString()).hideUno();
 					Clients.Caller.acceptMove();
 					update.CardHtml = RenderPartialView("Views/Shared/Card.cshtml", "Card", update.Card);
 					if (update.Action != null)
@@ -63,6 +64,32 @@ namespace ProyectoFinal.Hubs
 				{
 					Clients.Caller.acceptDraw(RenderPartialView("Views/Shared/Card.cshtml", "Card", update.Card));
 					Clients.Group(sessionId.ToString()).update(new GameUpdateModel { PreviousUserId = update.PreviousUserId, NextUserId = update.NextUserId });
+				}
+			}
+		}
+	
+		public void Uno(Guid sessionId)
+		{
+			using (var gamesService = new GamesService())
+			{
+				if (gamesService.TryYellUno(sessionId, Context.User.Identity.GetUserId()))
+				{
+					Clients.Group(sessionId.ToString()).hideUno();
+				}
+			}
+		}
+	
+		public void BlameUno(Guid sessionId)
+		{
+			using (var gamesService = new GamesService())
+			{
+				var update = gamesService.TryBlameUno(sessionId);
+				if (update != null)
+				{
+					update.CardHtml = "BlameUno";
+					update.Action.CardsReceivedCount = update.Action.CardsReceived.Count;
+					Clients.Group(update.Action.UserId).receiveCards(update.Action.CardsReceived.Select(c => RenderPartialView("Views/Shared/Card.cshtml", "Card", c)));
+					Clients.Group(sessionId.ToString()).update(update);
 				}
 			}
 		}

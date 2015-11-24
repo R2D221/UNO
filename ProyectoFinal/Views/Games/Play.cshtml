@@ -18,13 +18,14 @@
 	}
 	@Html.Partial("Card", Model.DiscardPileTop)
 </div>
+<div class="uno-button" style="display: none;">UNO</div>
 
 <div class="name-wrapper" style="bottom: 160px; left: calc(50% - 100px);">
 	<div id="user-@Model.Hands[0].User.Id" class="name @(Model.Hands[0].IsTheirTurn ? "active" : "")">
 		<div class="skip" style="display: none;">SKIP</div>
 		<div class="draw-two" style="display: none;">+2</div>
 		<div class="draw-four" style="display: none;">+4</div>
-		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[0].User.Id })"/>
+		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[0].User.Id })" />
 		<span>@Model.Hands[0].User.Name</span>
 	</div>
 </div>
@@ -107,16 +108,16 @@
 
 @section scripts {
 
-<script src="~/Scripts/jquery.signalR-2.2.0.min.js"></script>
-<script src="~/signalr/hubs"></script>
-<script>
+	<script src="~/Scripts/jquery.signalR-2.2.0.min.js"></script>
+	<script src="~/signalr/hubs"></script>
+	<script>
 	$(function () {
 		var userId = "@Model.Hands[0].User.Id";
 		var isMyTurn = @(Model.Hands[0].IsTheirTurn ? "true" : "false");
 		var game = $.connection.gameHub;
-	
+
 		var cardsReceived = [];
-	
+
 		game.client.receiveCards = function (cards) {
 			cardsReceived = cards;
 		}
@@ -155,17 +156,17 @@
 									isMyTurn = info.NextUserId == userId;
 								},
 							});
-					
+
 						if (cardsReceived.length)
 						{
 							$(".deck .card").slice(-cardsReceived.length).remove();
-						
+
 							cardsReceived.forEach(function (value, index) {
 								var $card = $(value.trim());
 								$(".deck").append($card);
 
 								var $hand = $("#my-hand");
-							
+
 								var offsetTop = $hand.offset().top - $card.offset().top;
 								$card.velocity({ translateY: "+=" + offsetTop },
 									{
@@ -186,9 +187,9 @@
 							{
 								var $card = $(this);
 								var $hand = $("#hand-" + info.Action.UserId);
-								
+
 								var transform;
-							
+
 								if ($hand.is(".cards-rotate-270"))
 								{
 									//vertical
@@ -201,7 +202,7 @@
 									var offsetTop = $hand.offset().top - $card.offset().top;
 									transform = { translateY: "+=" + offsetTop };
 								}
-							
+
 								$card.velocity(transform,
 									{
 										delay: 500 * index,
@@ -217,7 +218,45 @@
 			}
 
 			if (info.PreviousUserId != userId) {
-				if (info.CardHtml) {
+				if (!info.CardHtml) { //Draw a card
+
+					var $cardsReceivedHTML = $(".deck .card").slice(-1);
+					$cardsReceivedHTML.each(function (index)
+					{
+						var $card = $(this);
+						var $hand = $("#hand-" + info.PreviousUserId);
+
+						var transform;
+
+						if ($hand.is(".cards-rotate-270"))
+						{
+							//vertical
+							var offsetLeft = $hand.offset().left - $card.offset().left;
+							transform = { translateX: "+=" + offsetLeft };
+						}
+						else
+						{
+							//horizontal
+							var offsetTop = $hand.offset().top - $card.offset().top;
+							transform = { translateY: "+=" + offsetTop };
+						}
+
+						$card.velocity(transform,
+							{
+								delay: 500 * index,
+								complete: function ()
+								{
+									$card.css("transform", "").appendTo($hand);
+								}
+							});
+					});
+
+					checkAction();
+				}
+				else if (info.CardHtml == "BlameUno") {
+					checkAction();
+				}
+				else {
 					var $newCard = $(info.CardHtml.trim());
 					$("#hand-" + info.PreviousUserId).find(".card").last().remove();
 					$("#hand-" + info.PreviousUserId).append($newCard);
@@ -241,50 +280,30 @@
 						checkAction();
 					});
 				}
-				else { //Draw a card
 
-					var $cardsReceivedHTML = $(".deck .card").slice(-1);
-					$cardsReceivedHTML.each(function (index)
-					{
-						var $card = $(this);
-						var $hand = $("#hand-" + info.PreviousUserId);
-								
-						var transform;
-							
-						if ($hand.is(".cards-rotate-270"))
-						{
-							//vertical
-							var offsetLeft = $hand.offset().left - $card.offset().left;
-							transform = { translateX: "+=" + offsetLeft };
-						}
-						else
-						{
-							//horizontal
-							var offsetTop = $hand.offset().top - $card.offset().top;
-							transform = { translateY: "+=" + offsetTop };
-						}
-							
-						$card.velocity(transform,
-							{
-								delay: 500 * index,
-								complete: function ()
-								{
-									$card.css("transform", "").appendTo($hand);
-								}
-							});
-					});
-				
-					checkAction();
+				if (info.UNO) {
+					$(".uno").removeClass("uno");
+					$("#user-" + info.PreviousUserId).addClass("uno");
+				}
+				else {
+					game.client.hideUno();
 				}
 			}
 			else {
 				checkAction();
+
+				if (info.UNO) {
+					$(".uno-button").show();
+				}
+				else {
+					game.client.hideUno();
+				}
 			}
 		}
 
 		var acceptMove = function () { };
 		var denyMove = function () { };
-	
+
 		game.client.denyMove = function () { denyMove(); };
 		game.client.acceptMove = function () { acceptMove(); };
 		game.client.denyDraw = function () { };
@@ -293,7 +312,7 @@
 			$(".deck").append($card);
 
 			var $hand = $("#my-hand");
-							
+
 			var offsetTop = $hand.offset().top - $card.offset().top;
 			$card.velocity({ translateY: "+=" + offsetTop },
 				{
@@ -305,6 +324,11 @@
 				});
 		};
 
+		game.client.hideUno = function () {
+			$(".uno-button").hide();
+			$(".uno").removeClass("uno");
+		};
+
 		$.connection.hub.qs = { "sessionId": "@Model.Id" };
 		$.connection.hub.start().done(function () {
 			$("#my-hand").on("click", ".card", function (event) {
@@ -312,7 +336,7 @@
 
 				var $this = $(this);
 				var $discardPileTop = $(".discard-pile .card").last();
-			
+
 				function moveCard(color) {
 					var offsetLeft = $discardPileTop.offset().left - $this.offset().left;
 					var offsetTop = $discardPileTop.offset().top - ($this.offset().top - 0.3);
@@ -335,9 +359,9 @@
 						game.server.useCard("@Model.Id", $this.attr("id").replace("card-", ""), color);
 					});
 				}
-			
+
 				if ($this.data("rank") == "@Rank.Wild.ToString()" || $this.data("rank") == "@Rank.WildDrawFour.ToString()") {
-				
+
 					$("#modal-wild .modal-body").one("click", ".button-color", function (event) {
 						$this.data("color", $(this).data("color"));
 						$this.find(".card-inner").removeClass("card-wild").addClass("card-" + $(this).data("color"));
@@ -349,13 +373,24 @@
 					moveCard(0);
 				}
 			});
-		
+
 			$(".deck").on("click", function (event) {
 				if (!isMyTurn) return;
 				game.server.drawCard("@Model.Id");
 			});
+
+			$(".uno-button").on("click", function (event) {
+				game.server.uno("@Model.Id");
+			});
+
+			$(".name").on("click", function (event) {
+				if (!$(this).is(".uno"))
+					return;
+
+				game.server.blameUno("@Model.Id");
+			});
 		});
 
 	});
-</script>
+	</script>
 }

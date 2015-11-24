@@ -16,6 +16,7 @@ namespace ProyectoFinal.Models
 		public string NextUserId { get; set; }
 
 		public ActionModel Action { get; set; }
+		public bool UNO { get; internal set; }
 	}
 
 	public class ActionModel

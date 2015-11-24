@@ -326,8 +326,24 @@ textarea {
 	.deck .card-inner,
 	.discard-pile .card-inner {
 		/*box-shadow: 0px 0px 3px 0px rgba(0,0,0,0.5);*/
-	    box-shadow: 0px 1px 0px #444;
+		box-shadow: 0px 1px 0px #444;
 	}
+
+.uno-button {
+	position: fixed;
+	top: calc(50% - 30px);
+	left: calc(50% + 120px);
+	background-color: lightblue;
+	width: 100px;
+	height: 100px;
+	border-radius: 50px;
+	font-family: 'Fredoka One';
+	font-size: 32px;
+	line-height: 100px;
+	text-align: center;
+	color: black;
+	cursor: pointer;
+}
 
 .name-wrapper {
 	position: fixed;
@@ -347,6 +363,10 @@ textarea {
 
 	.name.active {
 		box-shadow: 0 0 3px 5px limegreen;
+	}
+
+	.name.uno {
+		background-color: indigo;
 	}
 
 	.name img, .name .img {
@@ -376,8 +396,7 @@ textarea {
 	padding-right: 8px;
 }
 
-.skip, .draw-two, .draw-four
-{
+.skip, .draw-two, .draw-four {
 	position: absolute;
 	top: -60px;
 	font-size: 60px;

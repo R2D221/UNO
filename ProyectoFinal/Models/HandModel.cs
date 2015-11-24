@@ -12,5 +12,7 @@ namespace ProyectoFinal.Models
 		public virtual List<Card> Cards { get; set; } = new List<Card>();
 
 		public bool IsTheirTurn { get; set; }
+	
+		public bool? IsSafe { get; set; }
 	}
 }
