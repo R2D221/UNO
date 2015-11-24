@@ -345,6 +345,29 @@ textarea {
 	cursor: pointer;
 }
 
+.direction {
+	position: fixed;
+	top: calc(50% - 30px);
+	left: calc(50% - 220px);
+	background-color: lightblue;
+	width: 100px;
+	height: 100px;
+	border-radius: 50px;
+	font-size: 90px;
+	line-height: 85px;
+	text-align: center;
+	color: black;
+	cursor: default;
+}
+
+.counterclockwise {
+	-moz-transform: scale(-1, 1);
+	-ms-transform: scale(-1, 1);
+	-o-transform: scale(-1, 1);
+	-webkit-transform: scale(-1, 1);
+	transform: scale(-1, 1);
+}
+
 .name-wrapper {
 	position: fixed;
 	width: 48px;

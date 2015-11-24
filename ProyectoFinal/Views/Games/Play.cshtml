@@ -19,6 +19,7 @@
 	@Html.Partial("Card", Model.DiscardPileTop)
 </div>
 <div class="uno-button" style="display: none;">UNO</div>
+<div class="direction counterclockwise"><span class="typcn typcn-refresh"></span></div>
 
 <div class="name-wrapper" style="bottom: 160px; left: calc(50% - 100px);">
 	<div id="user-@Model.Hands[0].User.Id" class="name @(Model.Hands[0].IsTheirTurn ? "active" : "")">
@@ -322,6 +323,15 @@
 				}
 				else {
 					game.client.hideUno();
+				}
+			}
+		
+			if (info.Direction != null) {
+				if (info.Direction == "@((int)Direction.Counterclockwise)") {
+					$(".direction").addClass("counterclockwise");
+				}
+				else {
+					$(".direction").removeClass("counterclockwise");
 				}
 			}
 		
