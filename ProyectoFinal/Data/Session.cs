@@ -21,6 +21,8 @@ namespace ProyectoFinal.Models
 
 		public Color Color { get; set; }
 
+		public DateTime LastPlayed { get; set; }
+
 		[ForeignKey(nameof(HandId1))]
 		public virtual Hand Hand1 { get; set; }
 		public Guid? HandId1 { get; set; }

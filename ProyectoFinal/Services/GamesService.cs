@@ -23,16 +23,17 @@ namespace ProyectoFinal.Services
 
 			using (var db = new ApplicationDbContext())
 			{
-				foreach (var card in db.Cards.Where(a => a.Rank == Rank.Wild || a.Rank == Rank.WildDrawFour))
-				{
-					card.Color = Color.Wild;
-				}
-				db.SaveChanges();
+				//foreach (var card in db.Cards.Where(a => a.Rank == Rank.Wild || a.Rank == Rank.WildDrawFour))
+				//{
+				//	card.Color = Color.Wild;
+				//}
+				//db.SaveChanges();
 			
 				foreach (var session in db.Sessions)
 				{
 					var sessionWithTurns = new SessionWithTurns(session.Direction, ToModel(session.Hand1), ToModel(session.Hand2), ToModel(session.Hand3), ToModel(session.Hand4))
 					{
+						LastPlayed = session.LastPlayed,
 						Deck = new Stack<Card>(session.Deck.Where(c => !c.IsDiscarded).OrderByDescending(c => c.Order).Select(c => c.Card).ToList()),
 						DiscardPile = new Stack<Card>(session.Deck.Where(c => c.IsDiscarded).OrderBy(c => c.Order).Select(c => c.Card).ToList().Concat(new[] { session.DiscardPileTop })),
 					};
@@ -115,6 +116,7 @@ namespace ProyectoFinal.Services
 				Direction = Direction.Counterclockwise,
 				DiscardPileTop = firstCard,
 				Deck = deck,
+				LastPlayed = DateTime.UtcNow,
 			};
 
 			db.Sessions.Add(session);
@@ -135,6 +137,7 @@ namespace ProyectoFinal.Services
 
 			var sessionWithTurns = new SessionWithTurns(session.Direction, ToModel(hand1), ToModel(hand2), ToModel(hand3), ToModel(hand4))
 			{
+				LastPlayed = session.LastPlayed,
 				Deck = cards,
 				DiscardPile = new Stack<Card>(new[] { firstCard }),
 			};
@@ -154,7 +157,7 @@ namespace ProyectoFinal.Services
 
 		public IEnumerable<SessionInfoModel> GetActiveSessionsForUser(string userId)
 		{
-			foreach (var entry in activeSessionsByUser.GetOrAdd(userId, _ => new ConcurrentDictionary<Guid, SessionWithTurns>()))
+			foreach (var entry in activeSessionsByUser.GetOrAdd(userId, _ => new ConcurrentDictionary<Guid, SessionWithTurns>()).OrderBy(x => x.Value.LastPlayed))
 			{
 				yield return new SessionInfoModel
 				{
@@ -303,6 +306,9 @@ namespace ProyectoFinal.Services
 			dbSession.Hand4.IsTheirTurn = dbSession.Hand4.UserId == nextUserId;
 		
 			dbSession.Direction = session.Direction;
+		
+			dbSession.LastPlayed = DateTime.UtcNow;
+			session.LastPlayed = dbSession.LastPlayed;
 
 			db.SaveChanges();
 
@@ -313,6 +319,43 @@ namespace ProyectoFinal.Services
 				PreviousUserId	= userId,
 				NextUserId	= nextUserId,
 				Action	= action,
+			};
+		}
+
+		public GameUpdateModel TryDrawCard(Guid sessionId, string userId)
+		{
+			var session = activeSessions[sessionId];
+			var hand = session.GetHandForUserId(userId);
+			var dbSession = db.Sessions.Find(sessionId);
+
+			if (!hand.IsTheirTurn)
+				return null;
+		
+			var card = session.Deck.Pop();
+			session.GetHandForUserId(userId).Cards.Add(card);
+				
+			var dbHand = db.Hands.Single(a => a.SessionId == sessionId && a.UserId == userId);
+			var dbCard = db.Cards.Find(card.Id);
+			dbSession.Deck.Remove(dbSession.Deck.Single(a => a.CardId == card.Id));
+			dbHand.Cards.Add(dbCard);
+		
+			var nextUserId = session.MoveNext();
+
+			dbSession.Hand1.IsTheirTurn = dbSession.Hand1.UserId == nextUserId;
+			dbSession.Hand2.IsTheirTurn = dbSession.Hand2.UserId == nextUserId;
+			dbSession.Hand3.IsTheirTurn = dbSession.Hand3.UserId == nextUserId;
+			dbSession.Hand4.IsTheirTurn = dbSession.Hand4.UserId == nextUserId;
+		
+			dbSession.LastPlayed = DateTime.UtcNow;
+			session.LastPlayed = dbSession.LastPlayed;
+
+			db.SaveChanges();
+
+			return new GameUpdateModel
+			{
+				Card	= card,
+				PreviousUserId	= userId,
+				NextUserId	= nextUserId,
 			};
 		}
 	}

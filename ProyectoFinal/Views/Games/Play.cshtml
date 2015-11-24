@@ -93,18 +93,14 @@
 				<h4 class="modal-title" id="modal-wild-label">Elige un color</h4>
 			</div>
 			<div class="modal-body" style="text-align: center;">
-				<button type="button" class="btn button-color button-red" data-dismiss="modal"></button>
+				<button type="button" class="btn button-color button-red" data-dismiss="modal" data-color="red" data-intcolor="@((int)Color.Red)"></button>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<button type="button" class="btn button-color button-yellow" data-dismiss="modal"></button>
+				<button type="button" class="btn button-color button-yellow" data-dismiss="modal" data-color="yellow" data-intcolor="@((int)Color.Yellow)"></button>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<button type="button" class="btn button-color button-green" data-dismiss="modal"></button>
+				<button type="button" class="btn button-color button-green" data-dismiss="modal" data-color="green" data-intcolor="@((int)Color.Green)"></button>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<button type="button" class="btn button-color button-blue" data-dismiss="modal"></button>
+				<button type="button" class="btn button-color button-blue" data-dismiss="modal" data-color="blue" data-intcolor="@((int)Color.Blue)"></button>
 			</div>
-			@*<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-primary">Save changes</button>
-			</div>*@
 		</div>
 	</div>
 </div>
@@ -137,7 +133,7 @@
 				else switch (info.Action.Rank)
 				{
 					default: throw Error("Unknown rank");
-					case "@((int)Rank.Skip)":
+					case @((int)Rank.Skip):
 						$("#user-" + info.Action.UserId).find(".skip")
 							.velocity("fadeIn")
 							.velocity("fadeOut", {
@@ -148,9 +144,9 @@
 								},
 							});
 					break;
-					case "@((int)Rank.DrawTwo)":
-					case "@((int)Rank.WildDrawFour)":
-						$("#user-" + info.Action.UserId).find(info.Action.Rank == "@((int)Rank.DrawTwo)" ? ".draw-two" : ".draw-four")
+					case @((int)Rank.DrawTwo):
+					case @((int)Rank.WildDrawFour):
+						$("#user-" + info.Action.UserId).find(info.Action.Rank == @((int)Rank.DrawTwo) ? ".draw-two" : ".draw-four")
 							.velocity("fadeIn")
 							.velocity("fadeOut", {
 								delay: 500,
@@ -185,7 +181,7 @@
 						}
 						else
 						{
-							var $cardsReceivedHTML = $(".deck .card").slice(info.Action.Rank == "@((int)Rank.DrawTwo)" ? -2 : -4);
+							var $cardsReceivedHTML = $(".deck .card").slice(info.Action.Rank == @((int)Rank.DrawTwo) ? -2 : -4);
 							$cardsReceivedHTML.each(function (index)
 							{
 								var $card = $(this);
@@ -221,28 +217,65 @@
 			}
 
 			if (info.PreviousUserId != userId) {
-				var $newCard = $(info.CardHtml.trim());
-				$("#hand-" + info.PreviousUserId).find(".card").last().remove();
-				$("#hand-" + info.PreviousUserId).append($newCard);
+				if (info.CardHtml) {
+					var $newCard = $(info.CardHtml.trim());
+					$("#hand-" + info.PreviousUserId).find(".card").last().remove();
+					$("#hand-" + info.PreviousUserId).append($newCard);
 
-				var $discardPileTop = $(".discard-pile .card").last();
-				var offsetLeft = $discardPileTop.offset().left - $newCard.offset().left;
-				var offsetTop = $discardPileTop.offset().top - ($newCard.offset().top - 0.3);
+					var $discardPileTop = $(".discard-pile .card").last();
+					var offsetLeft = $discardPileTop.offset().left - $newCard.offset().left;
+					var offsetTop = $discardPileTop.offset().top - ($newCard.offset().top - 0.3);
 
-				$newCard.appendTo(".discard-pile");
+					$newCard.appendTo(".discard-pile");
 
-				$newCard.velocity({
-					translateX: "-=" + (offsetLeft) + "px",
-					translateY: "-=" + (offsetTop) + "px",
-				}, { duration: 0 });
+					$newCard.velocity({
+						translateX: "-=" + (offsetLeft) + "px",
+						translateY: "-=" + (offsetTop) + "px",
+					}, { duration: 0 });
 
-				$newCard.velocity({
-					translateX: "+=" + (offsetLeft) + "px",
-					translateY: "+=" + (offsetTop) + "px",
-				}, function () {
-					$newCard.css("transform", "");
+					$newCard.velocity({
+						translateX: "+=" + (offsetLeft) + "px",
+						translateY: "+=" + (offsetTop) + "px",
+					}, function () {
+						$newCard.css("transform", "");
+						checkAction();
+					});
+				}
+				else { //Draw a card
+
+					var $cardsReceivedHTML = $(".deck .card").slice(-1);
+					$cardsReceivedHTML.each(function (index)
+					{
+						var $card = $(this);
+						var $hand = $("#hand-" + info.PreviousUserId);
+								
+						var transform;
+							
+						if ($hand.is(".cards-rotate-270"))
+						{
+							//vertical
+							var offsetLeft = $hand.offset().left - $card.offset().left;
+							transform = { translateX: "+=" + offsetLeft };
+						}
+						else
+						{
+							//horizontal
+							var offsetTop = $hand.offset().top - $card.offset().top;
+							transform = { translateY: "+=" + offsetTop };
+						}
+							
+						$card.velocity(transform,
+							{
+								delay: 500 * index,
+								complete: function ()
+								{
+									$card.css("transform", "").appendTo($hand);
+								}
+							});
+					});
+				
 					checkAction();
-				});
+				}
 			}
 			else {
 				checkAction();
@@ -251,13 +284,30 @@
 
 		var acceptMove = function () { };
 		var denyMove = function () { };
+	
+		game.client.denyMove = function () { denyMove(); };
+		game.client.acceptMove = function () { acceptMove(); };
+		game.client.denyDraw = function () { };
+		game.client.acceptDraw = function (cardHTML) {
+			var $card = $(cardHTML.trim());
+			$(".deck").append($card);
 
-		game.client.acceptMove = function () { acceptMove(); }
-		game.client.denyMove = function () { denyMove(); }
+			var $hand = $("#my-hand");
+							
+			var offsetTop = $hand.offset().top - $card.offset().top;
+			$card.velocity({ translateY: "+=" + offsetTop },
+				{
+					delay: 500,
+					complete: function ()
+					{
+						$card.css("transform", "").appendTo($hand);
+					}
+				});
+		};
 
 		$.connection.hub.qs = { "sessionId": "@Model.Id" };
 		$.connection.hub.start().done(function () {
-			$(".cards").on("click", ".card", function (event) {
+			$("#my-hand").on("click", ".card", function (event) {
 				if (!isMyTurn) return;
 
 				var $this = $(this);
@@ -287,15 +337,22 @@
 				}
 			
 				if ($this.data("rank") == "@Rank.Wild.ToString()" || $this.data("rank") == "@Rank.WildDrawFour.ToString()") {
-					$(".button-red").one("click", function () { moveCard(@((int)Color.Red)); });
-					$(".button-yellow").one("click", function () { moveCard(@((int)Color.Yellow)); });
-					$(".button-green").one("click", function () { moveCard(@((int)Color.Green)); });
-					$(".button-blue").one("click", function () { moveCard(@((int)Color.Blue)); });
+				
+					$("#modal-wild .modal-body").one("click", ".button-color", function (event) {
+						$this.data("color", $(this).data("color"));
+						$this.find(".card-inner").removeClass("card-wild").addClass("card-" + $(this).data("color"));
+						moveCard(parseInt($(this).data("intcolor")));
+					});
 					$("#modal-wild").modal("show");
 				}
 				else if ($discardPileTop.data("color") == $this.data("color") || $discardPileTop.data("rank") == $this.data("rank")) {
 					moveCard(0);
 				}
+			});
+		
+			$(".deck").on("click", function (event) {
+				if (!isMyTurn) return;
+				game.server.drawCard("@Model.Id");
 			});
 		});
 

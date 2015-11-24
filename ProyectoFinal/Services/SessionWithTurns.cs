@@ -10,6 +10,8 @@ namespace ProyectoFinal.Services
 	{
 		private readonly IReadOnlyList<HandModel> hands;
 		private int current;
+	
+		public DateTime LastPlayed { get; set; }
 
 		public Color Color { get; set; }
 		public Direction Direction { get; private set; }

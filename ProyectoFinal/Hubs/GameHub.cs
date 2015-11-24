@@ -49,6 +49,23 @@ namespace ProyectoFinal.Hubs
 				}
 			}
 		}
+	
+		public void DrawCard(Guid sessionId)
+		{
+			using (var gamesService = new GamesService())
+			{
+				var update = gamesService.TryDrawCard(sessionId, Context.User.Identity.GetUserId());
+				if (update == null)
+				{
+					Clients.Caller.denyDraw();
+				}
+				else
+				{
+					Clients.Caller.acceptDraw(RenderPartialView("Views/Shared/Card.cshtml", "Card", update.Card));
+					Clients.Group(sessionId.ToString()).update(new GameUpdateModel { PreviousUserId = update.PreviousUserId, NextUserId = update.NextUserId });
+				}
+			}
+		}
 
 		private string RenderPartialView(string view, string key, object model)
 		{
