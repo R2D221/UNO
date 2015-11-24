@@ -106,6 +106,31 @@
 	</div>
 </div>
 
+
+<div class="modal fade" id="modal-winner" tabindex="-1" role="dialog" aria-labelledby="modal-winner-label">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title" id="modal-winner-label">¡Felicidades!</h4>
+			</div>
+			<div class="modal-body">
+				<p>¡Felicidades! El ganadar de esta partida fue:</p>
+				<div class="media">
+					<div class="media-left">
+						<img class="media-object" src="/Account/Photo?userId=b0cb1672-4bfd-424b-a513-154913a72564" alt="" style="width: 64px;" />
+					</div>
+					<div class="media-body">
+						<h3>Arturo Torres</h3>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" data-dismiss="modal">Terminar partida</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 @section scripts {
 
 	<script src="~/Scripts/jquery.signalR-2.2.0.min.js"></script>
@@ -298,6 +323,16 @@
 				else {
 					game.client.hideUno();
 				}
+			}
+		
+			if (info.Winner) {
+				var $user = $("#user-" + info.PreviousUserId);
+				$("#modal-winner").find(".media-object").attr("src", $user.find("img").attr("src"));
+				$("#modal-winner").find(".media-body h3").text($user.find("span").text());
+				$('#modal-winner').on('hide.bs.modal', function (e) {
+					location.href = "@Url.Action("Index", "Home")";
+				});
+				$("#modal-winner").modal("show");
 			}
 		}
 

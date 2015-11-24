@@ -23,13 +23,7 @@ namespace ProyectoFinal.Services
 
 			using (var db = new ApplicationDbContext())
 			{
-				//foreach (var card in db.Cards.Where(a => a.Rank == Rank.Wild || a.Rank == Rank.WildDrawFour))
-				//{
-				//	card.Color = Color.Wild;
-				//}
-				//db.SaveChanges();
-			
-				foreach (var session in db.Sessions)
+				foreach (var session in db.Sessions.Where(s => s.Hand1.Cards.Any() && s.Hand2.Cards.Any() && s.Hand3.Cards.Any() && s.Hand4.Cards.Any()))
 				{
 					var sessionWithTurns = new SessionWithTurns(session.Direction, ToModel(session.Hand1), ToModel(session.Hand2), ToModel(session.Hand3), ToModel(session.Hand4))
 					{
@@ -316,6 +310,16 @@ namespace ProyectoFinal.Services
 			if (hand.Cards.Count == 1) {
 				hand.IsSafe = null;
 			}
+		
+			// If there's already a winner, we don't need to keep the session active anymore
+			if (hand.Cards.Count == 0) {
+				SessionWithTurns value;
+				activeSessions.TryRemove(sessionId, out value);
+				activeSessionsByUser[dbSession.Hand1.UserId].Value.TryRemove(sessionId, out value);
+				activeSessionsByUser[dbSession.Hand2.UserId].Value.TryRemove(sessionId, out value);
+				activeSessionsByUser[dbSession.Hand3.UserId].Value.TryRemove(sessionId, out value);
+				activeSessionsByUser[dbSession.Hand4.UserId].Value.TryRemove(sessionId, out value);
+			}
 
 			return new GameUpdateModel
 			{
@@ -325,6 +329,7 @@ namespace ProyectoFinal.Services
 				NextUserId	= nextUserId,
 				Action	= action,
 				UNO	= hand.Cards.Count == 1,
+				Winner	= hand.Cards.Count == 0,
 			};
 		}
 
