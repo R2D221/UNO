@@ -8,6 +8,7 @@ using System.Web.Mvc;
 using System.Web.Routing;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.SignalR;
+using ProyectoFinal.Models;
 using ProyectoFinal.Services;
 using RazorEngine;
 using RazorEngine.Configuration;
@@ -26,11 +27,11 @@ namespace ProyectoFinal.Hubs
 			return base.OnConnected();
 		}
 
-		public void UseCard(Guid sessionId, int cardId)
+		public void UseCard(Guid sessionId, int cardId, Color color)
 		{
 			using (var gamesService = new GamesService())
 			{
-				var update = gamesService.TryUseCard(sessionId, Context.User.Identity.GetUserId(), cardId);
+				var update = gamesService.TryUseCard(sessionId, Context.User.Identity.GetUserId(), cardId, color);
 				if (update == null)
 				{
 					Clients.Caller.denyMove();

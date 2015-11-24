@@ -376,7 +376,7 @@ textarea {
 	padding-right: 8px;
 }
 
-.skip, .draw-two
+.skip, .draw-two, .draw-four
 {
 	position: absolute;
 	top: -60px;
@@ -395,4 +395,29 @@ textarea {
 
 .draw-two {
 	background-color: gold;
+}
+
+.draw-four {
+	background-color: darkslategray;
+}
+
+.button-color {
+	width: 64px;
+	height: 64px;
+}
+
+.button-red {
+	background-color: #DD1F06;
+}
+
+.button-yellow {
+	background-color: #DDBE06;
+}
+
+.button-green {
+	background-color: #04A52F;
+}
+
+.button-blue {
+	background-color: #3B1397;
 }

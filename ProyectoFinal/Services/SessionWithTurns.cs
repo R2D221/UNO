@@ -11,6 +11,7 @@ namespace ProyectoFinal.Services
 		private readonly IReadOnlyList<HandModel> hands;
 		private int current;
 
+		public Color Color { get; set; }
 		public Direction Direction { get; private set; }
 		public Stack<Card> Deck { get; set; } = new Stack<Card>();
 		public Stack<Card> DiscardPile { get; set; } = new Stack<Card>();

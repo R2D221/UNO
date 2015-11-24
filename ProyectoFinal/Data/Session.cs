@@ -19,6 +19,8 @@ namespace ProyectoFinal.Models
 
 		public Direction Direction { get; set; }
 
+		public Color Color { get; set; }
+
 		[ForeignKey(nameof(HandId1))]
 		public virtual Hand Hand1 { get; set; }
 		public Guid? HandId1 { get; set; }

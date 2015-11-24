@@ -14,8 +14,8 @@ namespace ProyectoFinal.Services
 	{
 		public GamesService(ApplicationDbContext db = null) : base(db) { }
 
-		private static ConcurrentDictionary<Guid, SessionWithTurns> activeSessions;
-		private static ConcurrentDictionary<string, Lazy<ConcurrentDictionary<Guid, SessionWithTurns>>> activeSessionsByUser;
+		private static readonly ConcurrentDictionary<Guid, SessionWithTurns> activeSessions;
+		private static readonly ConcurrentDictionary<string, Lazy<ConcurrentDictionary<Guid, SessionWithTurns>>> activeSessionsByUser;
 		static GamesService()
 		{
 			activeSessions = new ConcurrentDictionary<Guid, SessionWithTurns>();
@@ -23,6 +23,12 @@ namespace ProyectoFinal.Services
 
 			using (var db = new ApplicationDbContext())
 			{
+				foreach (var card in db.Cards.Where(a => a.Rank == Rank.Wild || a.Rank == Rank.WildDrawFour))
+				{
+					card.Color = Color.Wild;
+				}
+				db.SaveChanges();
+			
 				foreach (var session in db.Sessions)
 				{
 					var sessionWithTurns = new SessionWithTurns(session.Direction, ToModel(session.Hand1), ToModel(session.Hand2), ToModel(session.Hand3), ToModel(session.Hand4))
@@ -174,7 +180,7 @@ namespace ProyectoFinal.Services
 			};
 		}
 
-		public GameUpdateModel TryUseCard(Guid sessionId, string userId, int cardId)
+		public GameUpdateModel TryUseCard(Guid sessionId, string userId, int cardId, Color color)
 		{
 			var session = activeSessions[sessionId];
 			var hand = session.GetHandForUserId(userId);
@@ -187,8 +193,22 @@ namespace ProyectoFinal.Services
 				return null;
 
 			var discardPileTop = session.DiscardPile.Peek();
-			//if (card.Color != discardPileTop.Color && card.Rank != discardPileTop.Rank)
-			//	return null;
+		
+			if (card.Rank == Rank.Wild || card.Rank == Rank.WildDrawFour) //<-- I play a wild card, so it's OK
+			{
+				//continue
+			}
+			else if (discardPileTop.Rank == Rank.Wild || discardPileTop.Rank == Rank.WildDrawFour) //<-- There's a wild card on the pile, check which color it is
+			{
+				if (card.Color != session.Color)
+				{
+					return null;
+				}
+			}
+			else if (card.Color != discardPileTop.Color && card.Rank != discardPileTop.Rank) //<-- Normal cards, don't match
+			{
+				return null;
+			}
 
 			var dbSession = db.Sessions.Find(sessionId);
 			var dbDiscard = dbSession.DiscardPileTop;
@@ -211,16 +231,20 @@ namespace ProyectoFinal.Services
 			}
 
 			ActionModel action = null;
-		
-			switch (Rank.DrawTwo)
-			//switch (card.Rank)
+
+			switch (card.Rank)
 			{
+				case Rank.Reverse:
+				{
+					session.Reverse();
+				}
+				break;
 				case Rank.Skip:
 				{
 					var skippedUserId = session.MoveNext();
 					action = new ActionModel
 					{
-						Rank = Rank.Skip,
+						Rank = card.Rank,
 						UserId = skippedUserId,
 					};
 				}
@@ -228,11 +252,19 @@ namespace ProyectoFinal.Services
 				case Rank.DrawTwo:
 				{
 					var skippedUserId = session.MoveNext();
-					var cardsReceived = new List<Card> { session.Deck.Pop(), session.Deck.Pop() };
+					List<Card> cardsReceived;
+					if (card.Rank == Rank.DrawTwo)
+					{
+						cardsReceived = new List<Card> { session.Deck.Pop(), session.Deck.Pop() };
+					}
+					else //if (card.Rank == Rank.WildDrawFour)
+					{
+						cardsReceived = new List<Card> { session.Deck.Pop(), session.Deck.Pop(), session.Deck.Pop(), session.Deck.Pop() };
+					}
 					session.GetHandForUserId(skippedUserId).Cards.AddRange(cardsReceived);
 					action = new ActionModel
 					{
-						Rank = Rank.Skip,
+						Rank = card.Rank,
 						UserId = skippedUserId,
 						CardsReceived = cardsReceived,
 					};
@@ -246,6 +278,20 @@ namespace ProyectoFinal.Services
 					}
 				}
 				break;
+				case Rank.Wild:
+				{
+					session.Color = color;
+					dbSession.Color = color;
+					card = new Card { Id = card.Id, Rank = card.Rank, Color = color };
+				}
+				break;
+				case Rank.WildDrawFour:
+				{
+					session.Color = color;
+					dbSession.Color = color;
+					card = new Card { Id = card.Id, Rank = card.Rank, Color = color };
+				}
+				goto case Rank.DrawTwo;
 			}
 
 			// Turn to next user
@@ -255,6 +301,8 @@ namespace ProyectoFinal.Services
 			dbSession.Hand2.IsTheirTurn = dbSession.Hand2.UserId == nextUserId;
 			dbSession.Hand3.IsTheirTurn = dbSession.Hand3.UserId == nextUserId;
 			dbSession.Hand4.IsTheirTurn = dbSession.Hand4.UserId == nextUserId;
+		
+			dbSession.Direction = session.Direction;
 
 			db.SaveChanges();
 

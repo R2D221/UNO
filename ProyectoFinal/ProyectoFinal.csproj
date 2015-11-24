@@ -222,6 +222,10 @@
     <Compile Include="Migrations\201510260202410_AutomaticIds.Designer.cs">
       <DependentUpon>201510260202410_AutomaticIds.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201511172305552_SessionWithColor.cs" />
+    <Compile Include="Migrations\201511172305552_SessionWithColor.Designer.cs">
+      <DependentUpon>201511172305552_SessionWithColor.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\CreateGameViewModel.cs" />
@@ -336,6 +340,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201510260202410_AutomaticIds.resx">
       <DependentUpon>201510260202410_AutomaticIds.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201511172305552_SessionWithColor.resx">
+      <DependentUpon>201511172305552_SessionWithColor.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

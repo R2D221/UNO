@@ -23,6 +23,7 @@
 	<div id="user-@Model.Hands[0].User.Id" class="name @(Model.Hands[0].IsTheirTurn ? "active" : "")">
 		<div class="skip" style="display: none;">SKIP</div>
 		<div class="draw-two" style="display: none;">+2</div>
+		<div class="draw-four" style="display: none;">+4</div>
 		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[0].User.Id })"/>
 		<span>@Model.Hands[0].User.Name</span>
 	</div>
@@ -38,6 +39,7 @@
 	<div id="user-@Model.Hands[1].User.Id" class="name @(Model.Hands[1].IsTheirTurn ? "active" : "")">
 		<div class="skip" style="display: none;">SKIP</div>
 		<div class="draw-two" style="display: none;">+2</div>
+		<div class="draw-four" style="display: none;">+4</div>
 		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[1].User.Id })" />
 		<span>@Model.Hands[1].User.Name</span>
 	</div>
@@ -53,6 +55,7 @@
 	<div id="user-@Model.Hands[2].User.Id" class="name @(Model.Hands[2].IsTheirTurn ? "active" : "")">
 		<div class="skip" style="display: none;">SKIP</div>
 		<div class="draw-two" style="display: none;">+2</div>
+		<div class="draw-four" style="display: none;">+4</div>
 		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[2].User.Id })" />
 		<span>@Model.Hands[2].User.Name</span>
 	</div>
@@ -69,6 +72,7 @@
 	<div id="user-@Model.Hands[3].User.Id" class="name @(Model.Hands[3].IsTheirTurn ? "active" : "")">
 		<div class="skip" style="display: none;">SKIP</div>
 		<div class="draw-two" style="display: none;">+2</div>
+		<div class="draw-four" style="display: none;">+4</div>
 		<img src="@Url.Action("Photo", "Account", new { userId = Model.Hands[3].User.Id })" />
 		<span>@Model.Hands[3].User.Name</span>
 	</div>
@@ -78,6 +82,31 @@
 	{
 		@Html.Partial("Card", card)
 	}
+</div>
+
+
+<div class="modal fade" id="modal-wild" tabindex="-1" role="dialog" aria-labelledby="modal-wild-label">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="modal-wild-label">Elige un color</h4>
+			</div>
+			<div class="modal-body" style="text-align: center;">
+				<button type="button" class="btn button-color button-red" data-dismiss="modal"></button>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<button type="button" class="btn button-color button-yellow" data-dismiss="modal"></button>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<button type="button" class="btn button-color button-green" data-dismiss="modal"></button>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<button type="button" class="btn button-color button-blue" data-dismiss="modal"></button>
+			</div>
+			@*<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary">Save changes</button>
+			</div>*@
+		</div>
+	</div>
 </div>
 
 @section scripts {
@@ -105,8 +134,7 @@
 					$("#user-" + info.NextUserId).addClass("active");
 					isMyTurn = info.NextUserId == userId;
 				}
-				//else switch (info.Action.Rank)
-				else switch ("@((int)Rank.DrawTwo)")
+				else switch (info.Action.Rank)
 				{
 					default: throw Error("Unknown rank");
 					case "@((int)Rank.Skip)":
@@ -121,7 +149,8 @@
 							});
 					break;
 					case "@((int)Rank.DrawTwo)":
-						$("#user-" + info.Action.UserId).find(".draw-two")
+					case "@((int)Rank.WildDrawFour)":
+						$("#user-" + info.Action.UserId).find(info.Action.Rank == "@((int)Rank.DrawTwo)" ? ".draw-two" : ".draw-four")
 							.velocity("fadeIn")
 							.velocity("fadeOut", {
 								delay: 500,
@@ -133,21 +162,30 @@
 					
 						if (cardsReceived.length)
 						{
-							var $cardsReceivedHTML = $();
-
-							$(".discard-pile .card").slice(-cardsReceived.length).remove();
+							$(".deck .card").slice(-cardsReceived.length).remove();
 						
 							cardsReceived.forEach(function (value, index) {
 								var $card = $(value.trim());
-								$(".discard-pile .card").append($card);
-								$cardsReceivedHTML.add($card);
+								$(".deck").append($card);
+
+								var $hand = $("#my-hand");
+							
+								var offsetTop = $hand.offset().top - $card.offset().top;
+								$card.velocity({ translateY: "+=" + offsetTop },
+									{
+										delay: 500 * (index + 1),
+										complete: function ()
+										{
+											$card.css("transform", "").appendTo($hand);
+										}
+									});
 							});
-						
+
 							cardsReceived = [];
 						}
 						else
 						{
-							var $cardsReceivedHTML = $(".deck .card").slice(-2);
+							var $cardsReceivedHTML = $(".deck .card").slice(info.Action.Rank == "@((int)Rank.DrawTwo)" ? -2 : -4);
 							$cardsReceivedHTML.each(function (index)
 							{
 								var $card = $(this);
@@ -224,9 +262,8 @@
 
 				var $this = $(this);
 				var $discardPileTop = $(".discard-pile .card").last();
-
-				//if ($discardPileTop.data("color") == $this.data("color") || $discardPileTop.data("rank") == $this.data("rank")) {
-
+			
+				function moveCard(color) {
 					var offsetLeft = $discardPileTop.offset().left - $this.offset().left;
 					var offsetTop = $discardPileTop.offset().top - ($this.offset().top - 0.3);
 
@@ -245,9 +282,20 @@
 								translateY: "-=" + (offsetTop) + "px",
 							});
 						};
-						game.server.useCard("@Model.Id", $this.attr("id").replace("card-", ""));
+						game.server.useCard("@Model.Id", $this.attr("id").replace("card-", ""), color);
 					});
-				//}
+				}
+			
+				if ($this.data("rank") == "@Rank.Wild.ToString()" || $this.data("rank") == "@Rank.WildDrawFour.ToString()") {
+					$(".button-red").one("click", function () { moveCard(@((int)Color.Red)); });
+					$(".button-yellow").one("click", function () { moveCard(@((int)Color.Yellow)); });
+					$(".button-green").one("click", function () { moveCard(@((int)Color.Green)); });
+					$(".button-blue").one("click", function () { moveCard(@((int)Color.Blue)); });
+					$("#modal-wild").modal("show");
+				}
+				else if ($discardPileTop.data("color") == $this.data("color") || $discardPileTop.data("rank") == $this.data("rank")) {
+					moveCard(0);
+				}
 			});
 		});
 
